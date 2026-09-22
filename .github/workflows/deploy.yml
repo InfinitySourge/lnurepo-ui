@@ -1,0 +1,27 @@
+name: Deploy React to Azure
+
+on:
+  push:
+      branches:
+        - main
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Install dependencies and build
+      run: |
+        npm install
+        npm run build
+
+    - name: Upload to Azure Storage
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az storage blob upload-batch -d '$web' -s dist --connection-string "${{ secrets.AZURE_CONNECTION_STRING }}" --overwrite
