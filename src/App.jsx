@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 
-const API_URL = 'https://lnurepo-api-c7dzdydndzg8b5fq.polandcentral-01.azurewebsites.net';
+const API_URL = 'https://api.lnurepo.info';
 
 function App() {
   const [status, setStatus] = useState({ loading: true, data: null, error: false });
