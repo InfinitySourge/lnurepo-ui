@@ -58,7 +58,7 @@ function App() {
       .finally(() => setIsSending(false));
   };
 
-  // --- ДІАГНОСТИЧНІ ФУНКЦІЇ ---
+  // --- ДІАГНОСТИЧНІ ФУНКЦІЇ ..---
   const runTest = async (endpoint) => {
     setDiagnosticLog(`Пінг ${endpoint}...`);
     try {
