@@ -19,9 +19,19 @@ function App() {
 
   const fetchMessages = () => {
     fetch(`${API_URL}/api/messages`)
-      .then(res => res.json())
-      .then(data => setMessages(data))
-      .catch(() => {});
+      .then(res => {
+        if (!res.ok) throw new Error("Помилка мережі або ліміт запитів");
+        return res.json();
+      })
+      .then(data => {
+        // Захист від падіння: якщо сервер повернув масив - зберігаємо, інакше порожній масив
+        if (Array.isArray(data)) {
+          setMessages(data);
+        } else {
+          setMessages([]);
+        }
+      })
+      .catch(() => setMessages([])); // Якщо 429 блокування - просто показуємо порожньо
   };
 
   const handleSendMessage = (e) => {
@@ -34,11 +44,15 @@ function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: inputValue })
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Помилка відправки");
+        return res.json();
+      })
       .then(() => {
         setInputValue("");
         fetchMessages();
       })
+      .catch(err => alert("Не вдалося відправити. Можливо, ви відправляєте занадто часто!"))
       .finally(() => setIsSending(false));
   };
 
@@ -85,14 +99,20 @@ function App() {
         </form>
 
         <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-          {messages.map((msg) => (
-            <div key={msg.id} className="p-4 bg-gray-750 border border-gray-700 rounded-2xl">
-              <p className="text-gray-200 break-words">{msg.content}</p>
-              <div className="text-xs text-gray-500 mt-2">
-                ID: {msg.id} • {new Date(msg.created_at).toLocaleString('uk-UA')}
-              </div>
+          {messages.length === 0 ? (
+            <div className="text-center text-gray-500 py-8 border-2 border-dashed border-gray-700 rounded-2xl">
+              База даних порожня. Будь першим, хто залишить повідомлення!
             </div>
-          ))}
+          ) : (
+            messages.map((msg) => (
+              <div key={msg.id} className="p-4 bg-gray-750 border border-gray-700 rounded-2xl">
+                <p className="text-gray-200 break-words">{msg.content}</p>
+                <div className="text-xs text-gray-500 mt-2">
+                  ID: {msg.id} • {new Date(msg.created_at).toLocaleString('uk-UA')}
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
       </div>
