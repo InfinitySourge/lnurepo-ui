@@ -1,68 +1,100 @@
-import { useEffect, useState } from 'react'
-
+import { useEffect, useState } from 'react';
 
 const API_URL = 'https://api.lnurepo.info';
 
 function App() {
   const [status, setStatus] = useState({ loading: true, data: null, error: false });
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/status`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Помилка сервера');
-        return res.json();
-      })
-      .then((data) => setStatus({ loading: false, data, error: false }))
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => setStatus({ loading: false, data, error: false }))
       .catch(() => setStatus({ loading: false, data: null, error: true }));
+
+    fetchMessages();
   }, []);
 
+  const fetchMessages = () => {
+    fetch(`${API_URL}/api/messages`)
+      .then(res => res.json())
+      .then(data => setMessages(data))
+      .catch(() => {});
+  };
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+
+    setIsSending(true);
+    fetch(`${API_URL}/api/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: inputValue })
+    })
+      .then(res => res.json())
+      .then(() => {
+        setInputValue("");
+        fetchMessages();
+      })
+      .finally(() => setIsSending(false));
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 font-sans">
-      <div className="w-full max-w-md p-8 bg-gray-800 rounded-3xl shadow-2xl border border-gray-700">
-        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-8 text-center tracking-tight">
-          LNUrepo Status
-        </h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 font-sans p-4">
+      <div className="w-full max-w-2xl p-8 bg-gray-800 rounded-3xl shadow-2xl border border-gray-700">
         
-        <div className="space-y-4">
-          {status.loading && (
-            <div className="flex items-center justify-center space-x-2 py-4 animate-pulse">
-              <div className="w-2.5 h-2.5 bg-blue-400 rounded-full"></div>
-              <div className="w-2.5 h-2.5 bg-blue-400 rounded-full delay-100"></div>
-              <div className="w-2.5 h-2.5 bg-blue-400 rounded-full delay-200"></div>
-              <span className="ml-3 font-medium text-blue-300">Перевірка систем...</span>
-            </div>
-          )}
-
-          {!status.loading && status.error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 flex items-center space-x-3">
-              <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="font-semibold">Бекенд не відповідає</span>
-            </div>
-          )}
-
-          {!status.loading && status.data && (
-            <div className="space-y-3">
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between">
-                <span className="text-emerald-100 font-medium">API Сервер</span>
-                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-bold flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Online
-                </span>
-              </div>
-              
-              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-between">
-                <span className="text-blue-100 font-medium">База Даних</span>
-                {status.data.database_configured ? (
-                  <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-sm font-bold">Підключено</span>
-                ) : (
-                  <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-bold">Відключено</span>
-                )}
-              </div>
-            </div>
-          )}
+        <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight">
+            LNUrepo Board
+          </h1>
+          
+          <div className="flex items-center space-x-2">
+            {!status.loading && status.data && (
+              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-bold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                DB: OK
+              </span>
+            )}
+            {!status.loading && status.error && (
+              <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs font-bold">Offline</span>
+            )}
+          </div>
         </div>
+
+        <form onSubmit={handleSendMessage} className="mb-8">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Введіть текст..."
+              className="flex-1 bg-gray-900 text-gray-100 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              disabled={isSending}
+            />
+            <button
+              type="submit"
+              disabled={isSending || !inputValue.trim()}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl disabled:opacity-50"
+            >
+              {isSending ? "..." : "Надіслати"}
+            </button>
+          </div>
+        </form>
+
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+          {messages.map((msg) => (
+            <div key={msg.id} className="p-4 bg-gray-750 border border-gray-700 rounded-2xl">
+              <p className="text-gray-200 break-words">{msg.content}</p>
+              <div className="text-xs text-gray-500 mt-2">
+                ID: {msg.id} • {new Date(msg.created_at).toLocaleString('uk-UA')}
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );
