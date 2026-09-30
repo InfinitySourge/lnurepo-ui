@@ -40,7 +40,7 @@ function HomePage() {
         <Link className="home-brand" to="/">
           LNUrepo
         </Link>
-        <Link className="home-account-link" to="/auth">
+        <Link className="home-account-link" to="/login">
           Вхід
         </Link>
       </header>

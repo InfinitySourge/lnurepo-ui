@@ -1,17 +1,30 @@
-import { Route, Routes } from 'react-router-dom';
-import AuthPage from './pages/AuthPage.jsx';
-import BoardPage from './pages/BoardPage.jsx';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage.jsx';
+
+const ProtectedRoute = ({ children }) => {
+  const isAuth = false; // Зміни на true, щоб побачити Dashboard
+  return isAuth ? children : <Navigate to="/login" replace />;
+};
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<BoardPage />} />
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/board" element={<BoardPage />} />
-      <Route path="/home" element={<HomePage />} />
-      <Route path="*" element={<BoardPage />} />
-    </Routes>
+    <BrowserRouter>
+      <Routes>
+        {/* Відкритий маршрут */}
+        <Route path="/login" element={<AuthPage />} />
+
+        {/* Закритий маршрут */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
