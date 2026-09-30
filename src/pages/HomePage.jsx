@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './pages.css';
+import { useAuth } from '../auth-context.js';
 
 const faculties = [
   'Факультет прикладної математики та інформатики',
@@ -19,6 +20,8 @@ const faculties = [
 ];
 
 function HomePage() {
+  const { user, logout } = useAuth();
+  const [logoutError, setLogoutError] = useState('');
   const [query, setQuery] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [isFacultyListOpen, setIsFacultyListOpen] = useState(false);
@@ -40,9 +43,11 @@ function HomePage() {
         <Link className="home-brand" to="/">
           LNUrepo
         </Link>
-        <Link className="home-account-link" to="/login">
-          Вхід
-        </Link>
+        <button className="home-account-link" type="button" onClick={() => {
+          setLogoutError('');
+          logout().catch(() => setLogoutError('Не вдалося вийти. Спробуйте ще раз.'));
+        }}>Вийти</button>
+        {logoutError && <p role="alert">{logoutError}</p>}
       </header>
 
       <aside
@@ -51,12 +56,10 @@ function HomePage() {
       >
         <div className="profile-summary">
           <div className="profile-avatar" aria-hidden="true">
-            ПБ
+            {user.name?.slice(0, 2) || 'ЛНУ'}
           </div>
           <h2>
-            Петро
-            <br />
-            Булочка
+            {user.name || user.email}
           </h2>
         </div>
         <dl className="profile-details">

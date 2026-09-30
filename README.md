@@ -1,23 +1,23 @@
 # LNUrepo UI
 
-This is the frontend client for the **LNUrepo** university project. It's a React-based single-page application (SPA) that provides a user interface for a cloud-hosted message board.
+React/Vite university materials UI. Login uses the API's Microsoft OAuth flow.
+Session credentials are HttpOnly cookies, not localStorage or URL tokens.
 
-## Overview
+For development, set VITE_API_ORIGIN=http://localhost:8000 in .env.local and use
+localhost:5173 for the UI. Production requires HTTPS and the UI/API on the same
+site (lnurepo.info and api.lnurepo.info). VITE_* values are public build inputs;
+never put secrets in them.
 
-The application is designed to interact with a secure backend API and database. Main features include:
-- **Message Board:** View and post text messages (limited to 500 characters).
-- **Dev Mode / Diagnostic Panel:** A built-in dashboard to monitor the backend API status, verify the isolated database connection in real-time, and check container environment states.
+```powershell
+npm ci
+npm run dev
+npm run test -- --maxWorkers=1 --no-file-parallelism
+npm run lint
+npm run build
+npm audit
+```
 
-## Tech Stack
-
-- **Frontend:** React.js, Vite
-- **Networking & Security:** Cloudflare (handling strict CORS policies and security headers like HSTS and X-Frame-Options)
-- **Backend Architecture (Context):** FastAPI hosted on Azure App Service via Docker. The PostgreSQL database is fully isolated inside an Azure Virtual Network (VNet) and connected to the backend via Private DNS integration and SSL.
-
-## Local Setup
-
-To run this project locally, make sure you have Node.js installed.
-
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/infinitysourge/lnurepo-ui.git](https://github.com/infinitysourge/lnurepo-ui.git)
+The API origin defaults to https://api.lnurepo.info. All session requests include
+credentials. Protected UI routes depend on /auth/me; authorization is also enforced
+on the API. See ../SECURITY-REPORT.md for configuration, deployment and remaining
+infrastructure requirements.

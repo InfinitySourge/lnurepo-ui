@@ -21,7 +21,10 @@ jobs:
 
     - name: Run Tests
       run: npm run test
-    # ---------------------------------
+    
+    - name: Install dependencies and build
+      env:
+        VITE_API_ORIGIN: "https://api.lnurepo.info"
 
     - name: Build project
       run: npm run build
