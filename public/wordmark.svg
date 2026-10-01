@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 0 450 120" width="100%" height="100%">
+  <defs>
+    <!-- М'які градієнти для 3D ефекту -->
+    <linearGradient id="softBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#93C5FD"/>
+      <stop offset="100%" stop-color="#60A5FA"/>
+    </linearGradient>
+    <linearGradient id="midBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+    <linearGradient id="deepBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Текст: Максимально грубий, літери стиснуті, чітке кольорове розділення -->
+  <text x="105" y="85" font-family="'Inter', 'Helvetica Neue', 'Arial Black', sans-serif" font-weight="900" font-size="64" letter-spacing="-4">
+    <tspan fill="#3B82F6">LNU</tspan>
+    <tspan fill="#0F172A">repo</tspan>
+    <!-- Яскрава крапка в кінці для балансу і UI-естетики -->
+    <tspan fill="#3B82F6">.</tspan>
+  </text>
+</svg>

@@ -27,3 +27,4 @@ dist-ssr
 *.sw?
 
 _old
+.visual-check

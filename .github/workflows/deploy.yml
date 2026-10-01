@@ -1,13 +1,18 @@
-name: Deploy React to Azure
-
+name: Verify and deploy React to Azure
 on:
   push:
-      branches:
-        - main
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lnurepo-ui-production
+  cancel-in-progress: false
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+<<<<<<< HEAD
     - name: Checkout code
       uses: actions/checkout@v4
 
@@ -32,3 +37,33 @@ jobs:
       with:
         inlineScript: |
           az storage blob upload-batch -d '$web' -s dist --connection-string "${{ secrets.AZURE_CONNECTION_STRING }}" --overwrite
+=======
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify
+        run: |
+          npm run lint
+          npm run test -- --maxWorkers=1 --no-file-parallelism
+          npm audit --audit-level=high
+      - name: Build project
+        run: npm run build
+        env:
+          VITE_API_ORIGIN: https://api.lnurepo.info
+      - name: Upload to Azure Storage
+        uses: azure/CLI@v2
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_CONNECTION_STRING }}
+        with:
+          inlineScript: |
+            # Upload assets first; publish the new entry point last.
+            az storage blob upload-batch -d '$web' -s dist/assets --destination-path assets --overwrite --content-cache-control 'public, max-age=31536000, immutable'
+            az storage blob upload-batch -d '$web' -s dist --pattern '*.svg' --overwrite --content-cache-control 'no-cache'
+            az storage blob upload -c '$web' -f dist/index.html -n index.html --overwrite --content-type 'text/html; charset=utf-8' --content-cache-control 'no-store'
+>>>>>>> 13dc803 (Entra + security update)
