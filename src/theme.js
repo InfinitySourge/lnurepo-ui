@@ -1,4 +1,8 @@
 const storageKey = 'lnurepo-theme';
+export function getTheme() {
+  try { const value = localStorage.getItem(storageKey); return ['light', 'dark', 'system'].includes(value) ? value : 'dark'; }
+  catch { return 'dark'; }
+}
 export function setTheme(theme) {
   if (!['light', 'dark', 'system'].includes(theme)) throw new Error('Invalid theme');
   try { localStorage.setItem(storageKey, theme); } catch { /* Storage may be disabled. */ }
@@ -9,14 +13,12 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
 }
 export function initializeTheme() {
-  let theme = 'system';
-  try { theme = localStorage.getItem(storageKey) || 'system'; } catch { /* Optional preference. */ }
-  if (!['light', 'dark', 'system'].includes(theme)) theme = 'system';
+  const theme = getTheme();
   applyTheme(theme);
   const media = matchMedia('(prefers-color-scheme: dark)');
   media.addEventListener('change', () => {
-    let preference = 'system';
-    try { preference = localStorage.getItem(storageKey) || 'system'; } catch { /* Optional preference. */ }
+    const preference = getTheme();
     if (preference === 'system') applyTheme('system');
   });
+  window.addEventListener('storage', (event) => { if (event.key === storageKey) applyTheme(getTheme()); });
 }

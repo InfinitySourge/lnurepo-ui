@@ -43,12 +43,11 @@ describe('Cookie authentication and profile', () => {
     renderApp();
     expect(await screen.findByRole('heading', { name: 'Сервер тимчасово недоступний' })).toBeTruthy();
   });
-  it('keeps home usable if old backend has no profile endpoint', async () => {
+  it('blocks protected content when the profile endpoint is unavailable', async () => {
     fetch.mockResolvedValueOnce(response(user)).mockResolvedValueOnce(response(null, 404));
     renderApp();
-    expect(await screen.findByRole('heading', { name: 'База навчальних матеріалів ЛНУ' })).toBeTruthy();
-    expect(screen.getByText('Профіль тимчасово недоступний')).toBeTruthy();
-    expect(screen.queryByText('ПМА-32')).toBeNull();
+    expect(await screen.findByRole('heading', { name: 'Сервер тимчасово недоступний' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Знання ближче, ніж здається' })).toBeNull();
   });
   it('shows first-time onboarding with an accessible validation popup', async () => {
     signedIn(null);
@@ -94,13 +93,15 @@ describe('Cookie authentication and profile', () => {
   });
   it('provides keyboard faculty search and an honest empty catalogue', async () => {
     signedIn();
+    const empty = { available: true, items: [], has_more: false };
+    fetch.mockResolvedValue(response({ disciplines: empty, teachers: empty, materials: empty }));
     renderApp();
-    await screen.findByRole('heading', { name: 'База навчальних матеріалів ЛНУ' });
+    await screen.findByRole('heading', { name: 'Знання ближче, ніж здається' });
     const search = screen.getByRole('combobox');
     fireEvent.change(search, { target: { value: 'Фізичний' } });
     fireEvent.keyDown(search, { key: 'Enter' });
     expect(search.value).toBe('Фізичний факультет');
-    expect(screen.getByText('Матеріали ще не додані')).toBeTruthy();
+    await waitFor(() => expect(screen.getAllByRole('heading', { name: 'Тут поки порожньо' })).toHaveLength(3));
   });
 });
 function fillProfile() {

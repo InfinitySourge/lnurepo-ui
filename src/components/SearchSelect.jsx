@@ -1,11 +1,12 @@
 import { useId, useState } from 'react';
 export default function SearchSelect({ label, options, value, onChange, placeholder = 'Почніть вводити…' }) {
   const id = useId();
-  const [query, setQuery] = useState(value || '');
+  const [draft, setQuery] = useState(null);
+  const query = draft ?? value ?? '';
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const filtered = options.filter((item) => item.toLocaleLowerCase('uk').includes(query.toLocaleLowerCase('uk')));
-  function choose(option) { setQuery(option); onChange(option); setOpen(false); }
+  function choose(option) { setQuery(null); onChange(option); setOpen(false); }
   return <div className="relative" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
     <label className="mb-3 block text-sm font-semibold" htmlFor={id}>{label}</label>
     <div className="relative">
@@ -15,7 +16,7 @@ export default function SearchSelect({ label, options, value, onChange, placehol
         onChange={(event) => { setQuery(event.target.value); onChange(''); setActive(0); setOpen(true); }}
         onKeyDown={(event) => {
           if (event.key === 'Escape') setOpen(false);
-          if (event.key === 'ArrowDown') { event.preventDefault(); setOpen(true); setActive((item) => Math.max(0, Math.min(item + 1, filtered.length - 1))); }
+          if (event.key === 'ArrowDown') { event.preventDefault(); setOpen(true); setActive((item) => open ? Math.max(0, Math.min(item + 1, filtered.length - 1)) : 0); }
           if (event.key === 'ArrowUp') { event.preventDefault(); setActive((item) => Math.max(0, item - 1)); }
           if (event.key === 'Enter' && open && filtered[active]) { event.preventDefault(); choose(filtered[active]); }
         }}

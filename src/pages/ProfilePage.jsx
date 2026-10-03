@@ -1,20 +1,19 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth-context.js';
-import AppLayout from '../layouts/AppLayout.jsx';
 import Field from '../components/Field.jsx';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import Notice from '../components/Notice.jsx';
+import ThemePicker from '../components/ThemePicker.jsx';
 import { faculties } from '../data/faculties.js';
 import { validateProfile } from '../profile.js';
-import { errorMessage } from '../api.js';
+import { API_ORIGIN, errorMessage } from '../api.js';
 export default function ProfilePage() {
   const { user, profile, saveProfile } = useAuth();
   const navigate = useNavigate();
   const [values, setValues] = useState(() => {
-    const names = user.name.trim().split(/\s+/);
-    return profile || { first_name: user.first_name || names[0] || '', last_name: user.last_name || names.slice(1).join(' '), role: '', faculty: '', group: '' };
+    return profile || { first_name: user.first_name || '', last_name: user.last_name || '', role: '', faculty: '', group: '' };
   });
   const [errors, setErrors] = useState({});
   const [popup, setPopup] = useState(null);
@@ -44,11 +43,12 @@ export default function ProfilePage() {
     focusAfterClose.current = popup?.field;
     setPopup(null);
   }
-  return <AppLayout compactSidebar>
+  return <>
     <div className="max-w-3xl">
       <p className="mb-3 text-xs font-semibold tracking-widest text-slate-500 uppercase">Особистий кабінет</p>
       <h1 className="text-3xl font-bold">{profile ? 'Ваш профіль' : 'Завершіть реєстрацію'}</h1>
       <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">Перевірте ім’я та прізвище з Microsoft і заповніть дані для навчального простору.</p>
+      {!profile && <div className="mt-4"><Notice title="Завершіть налаштування">Після збереження профілю стануть доступні каталог і збережені матеріали.</Notice></div>}
       <form onSubmit={submit} noValidate className="mt-8 space-y-6 rounded-xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
         <fieldset disabled={busy} className="space-y-6 disabled:opacity-70">
           <legend className="sr-only">Дані профілю</legend>
@@ -61,15 +61,16 @@ export default function ProfilePage() {
           <Field label={values.role === 'teacher' ? 'Група (необов’язково)' : 'Група'} name="group" autoComplete="off" required={values.role === 'student'} maxLength={32} placeholder="Наприклад, ПМА-32" value={values.group} onChange={change} error={errors.group} />
           <Notice title="Про статус у профілі">Вибір статусу не надає прав на редагування матеріалів або адміністрування.</Notice>
         </fieldset>
-        <div className="flex flex-wrap items-center gap-3"><Button type="submit" busy={busy}>Зберегти профіль</Button>{profile && <Button to="/" variant="secondary">Скасувати</Button>}</div>
+        <div className="flex flex-wrap items-center gap-3"><Button type="submit" busy={busy}>Зберегти профіль</Button>{profile && !busy && <Button to="/" variant="secondary">Скасувати</Button>}</div>
       </form>
+      <ThemePicker />
     </div>
     <Modal open={Boolean(popup)} title={popup?.title || ''} onClose={close} onClosed={() => {
       if (focusAfterClose.current) document.getElementsByName(focusAfterClose.current)[0]?.focus();
       focusAfterClose.current = null;
     }}>
       <ul className="list-disc space-y-2 pl-5">{popup?.messages.map((message) => <li key={message}>{message}</li>)}</ul>
-      {popup?.sessionExpired && <Button href="/login" className="mt-4">Увійти знову</Button>}
+      {popup?.sessionExpired && <Button href={API_ORIGIN + '/auth/login'} className="mt-4">Увійти знову</Button>}
     </Modal>
-  </AppLayout>;
+  </>;
 }

@@ -12,7 +12,6 @@ export default defineConfig(({ mode, command }) => {
     plugins: [react(), tailwindcss(), {
       name: 'production-csp',
       transformIndexHtml(html) {
-        // Vite injects scripts/styles in development; the restrictive CSP is for compiled assets.
         if (command !== 'build') return html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, '');
         return html.replaceAll('https://api.lnurepo.info', origin.origin);
       },

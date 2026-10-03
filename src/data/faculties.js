@@ -1,4 +1,3 @@
-// Product catalogue, not an authorization or university affiliation check.
 export const faculties = [
   'Біологічний факультет', 'Географічний факультет', 'Геологічний факультет',
   'Економічний факультет', 'Історичний факультет',

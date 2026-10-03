@@ -5,19 +5,32 @@ if (url.pathname !== '/' || url.search || url.hash || url.username || url.passwo
   throw new Error('Invalid API origin');
 }
 export const API_ORIGIN = url.origin;
+export const DESIGN_PREVIEW = import.meta.env.DEV && import.meta.env.MODE === 'design'
+  && ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
 export class ApiError extends Error {
   constructor(status = 0) { super('Request failed'); this.status = status; }
 }
-// Credentials stay in HttpOnly cookies. Never render raw API exception text.
-export async function request(path, { signal, method = 'GET', body } = {}) {
+export async function request(path, { signal, method = 'GET', body, query } = {}) {
   if (!/^\/(auth|api)\/[a-z/]+$/.test(path)) throw new ApiError();
+  let suffix = '';
+  if (query !== undefined) {
+    if (path !== '/api/catalog' || method !== 'GET' || !query || typeof query !== 'object'
+        || Object.entries(query).some(([key, value]) => !['faculty', 'q'].includes(key) || typeof value !== 'string')) throw new ApiError();
+    suffix = '?' + new URLSearchParams(query).toString();
+  }
+  if (DESIGN_PREVIEW) {
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    const { previewRequest } = await import('./design-preview.js');
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    return previewRequest(path, { method, body });
+  }
   const controller = new AbortController();
   const abort = () => controller.abort();
   if (signal?.aborted) abort();
   signal?.addEventListener('abort', abort, { once: true });
   const timeout = setTimeout(abort, 12000);
   try {
-    const response = await fetch(API_ORIGIN + path, {
+    const response = await fetch(API_ORIGIN + path + suffix, {
       method, credentials: 'include', cache: 'no-store', redirect: 'error',
       signal: controller.signal,
       ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),

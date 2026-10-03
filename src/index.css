@@ -6,9 +6,48 @@
   --color-brand-800: #17467e;
 }
 @layer base {
-  html { color-scheme: light; }
-  html[data-theme="dark"] { color-scheme: dark; }
-  body { @apply m-0 bg-slate-100 font-sans text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100; }
+  html {
+    color-scheme: light;
+    --app-background: #f1f5f9;
+    --app-surface: #ffffff;
+    --app-text: #0f172a;
+    --app-muted: #64748b;
+    --app-border: #e2e8f0;
+    --app-accent: #17467e;
+    --app-hover: #e2e8f0;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --app-background: #020617;
+    --app-surface: #0f172a;
+    --app-text: #f1f5f9;
+    --app-muted: #94a3b8;
+    --app-border: #1e293b;
+    --app-accent: #2563eb;
+    --app-hover: #1e293b;
+  }
+  body { @apply m-0 font-sans antialiased; background: var(--app-background); color: var(--app-text); }
   button, a, input, select { @apply outline-offset-4; }
   ::selection { @apply bg-blue-200 text-slate-950; }
+}
+@layer components {
+  .app-page { background: var(--app-background); color: var(--app-text); }
+  .app-panel { background: var(--app-surface); color: var(--app-text); border-color: var(--app-border); }
+  .app-muted { color: var(--app-muted); }
+  .app-nav-link {
+    display: block;
+    border: 1px solid transparent;
+    border-radius: .75rem;
+    padding: .75rem 1rem;
+    font-size: .875rem;
+    font-weight: 500;
+    background: var(--app-background);
+    color: var(--app-text);
+  }
+  .app-nav-link:hover { background: var(--app-hover); }
+  .app-nav-link[aria-current="page"] {
+    background: var(--app-accent);
+    border-color: var(--app-accent);
+    color: #ffffff;
+  }
 }

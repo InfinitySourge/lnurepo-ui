@@ -20,7 +20,7 @@ describe('Profile validation', () => {
     expect(document.documentElement.dataset.theme).toBe('light');
     localStorage.setItem('lnurepo-theme', '<script>');
     initializeTheme();
-    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(document.documentElement.dataset.theme).toBe('dark');
     localStorage.clear();
   });
 });
