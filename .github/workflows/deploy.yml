@@ -35,7 +35,8 @@ jobs:
         env:
           AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_CONNECTION_STRING }}
         with:
-          inlineScript: 
+          inlineScript: |
+            set -euo pipefail
             az storage blob upload-batch -d '$web' -s dist/assets --destination-path assets --overwrite --content-cache-control 'public, max-age=31536000, immutable'
             az storage blob upload-batch -d '$web' -s dist --pattern '*.svg' --overwrite --content-cache-control 'no-cache'
             az storage blob upload -c '$web' -f dist/theme-init.js -n theme-init.js --overwrite --content-type 'application/javascript; charset=utf-8' --content-cache-control 'no-cache'
