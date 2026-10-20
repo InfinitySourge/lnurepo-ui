@@ -1,6 +1,5 @@
 import { isProfile, validateProfile } from './profile.js';
 
-// Demo-only session storage survives Vite reloads; never stores a real identity/token.
 const storageKey = 'lnurepo-design-profile';
 function loadProfile() {
   try {
@@ -18,12 +17,11 @@ export function previewRequest(path, { method, body }) {
   if (path === '/api/profile' && method === 'POST') {
     if (!body || Object.keys(validateProfile(body)).length) throw new Error('Invalid demo profile');
     profile = { ...body };
-    try { sessionStorage.setItem(storageKey, JSON.stringify(profile)); } catch { /* In-memory fallback. */ }
+    try { sessionStorage.setItem(storageKey, JSON.stringify(profile)); } catch {  }
     return { ...profile };
   }
   if (path === '/api/catalog' && method === 'GET') return { disciplines: empty(), teachers: empty(), materials: empty() };
   if (path === '/api/favorites' && method === 'GET') return empty();
   if (path === '/api/faq' && method === 'GET') return {available:false,items:[]};
-  // Unknown requests must fail rather than accidentally fall through to production.
   throw new Error('Unsupported design preview request');
 }

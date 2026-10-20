@@ -5,7 +5,7 @@ export function getTheme() {
 }
 export function setTheme(theme) {
   if (!['light', 'dark', 'system'].includes(theme)) throw new Error('Invalid theme');
-  try { localStorage.setItem(storageKey, theme); } catch { /* Storage may be disabled. */ }
+  try { localStorage.setItem(storageKey, theme); } catch {  }
   applyTheme(theme);
 }
 function applyTheme(theme) {

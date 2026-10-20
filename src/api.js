@@ -5,6 +5,8 @@ if (url.pathname !== '/' || url.search || url.hash || url.username || url.passwo
   throw new Error('Invalid API origin');
 }
 export const API_ORIGIN = url.origin;
+export const TEAM_LOCAL = import.meta.env.DEV && import.meta.env.MODE === 'team'
+  && window.location.hostname === '127.0.0.1' && API_ORIGIN === 'http://127.0.0.1:8000';
 export const DESIGN_PREVIEW = import.meta.env.DEV && import.meta.env.MODE === 'design'
   && ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
 export class ApiError extends Error {
@@ -35,7 +37,7 @@ export async function request(path, { signal, method = 'GET', body, query } = {}
       signal: controller.signal,
       ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
     });
-    if (response.status === 401 || !response.ok) throw new ApiError(response.status);
+    if (!response.ok) throw new ApiError(response.status);
     return response.status === 204 ? null : await response.json();
   } finally {
     clearTimeout(timeout);

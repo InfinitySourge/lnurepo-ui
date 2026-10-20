@@ -2,6 +2,12 @@ name: Verify and deploy React to Azure
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.env.example'
+      - '.env.team'
+      - '.gitignore'
   workflow_dispatch:
 permissions:
   contents: read

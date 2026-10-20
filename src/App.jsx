@@ -14,9 +14,8 @@ import { useAuth } from './auth-context.js';
 function ProtectedRoute({ children }) {
   const { user, profileUnavailable, loading, unavailable, retry } = useAuth();
   if (loading) return <Loading fullPage>Перевіряємо сесію та профіль…</Loading>;
-  if (unavailable) return <ErrorPage code={503} retry={retry} />;
+  if (unavailable || profileUnavailable) return <ErrorPage code={503} retry={retry} />;
   if (!user) return <Navigate to="/login" replace />;
-  if (profileUnavailable) return <ErrorPage code={503} retry={retry} />;
   return children;
 }
 function ProfileRequired({ children }) {
