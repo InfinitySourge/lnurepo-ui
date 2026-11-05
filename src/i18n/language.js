@@ -23,7 +23,11 @@ function applyLanguage() {
 export function setLanguage(value) {
   if (!Object.hasOwn(dictionaries, value)) return;
   language = value;
-  try { localStorage.setItem(storageKey, value); } catch { }
+  try {
+  localStorage.setItem(storageKey, value);
+} catch {
+
+}
   applyLanguage();
   listeners.forEach((listener) => listener());
 }
