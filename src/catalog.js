@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ApiError, request } from './api.js';
 function validBucket(b) {
   return b && typeof b.available === 'boolean' && typeof b.has_more === 'boolean' && Array.isArray(b.items) && b.items.length <= 30 && (b.available || b.items.length === 0)
-    && b.items.every((i) => i && (i.description == null || typeof i.description === 'string' && i.description.length <= 2000) && ['id', 'title', 'faculty'].every((k) => typeof i[k] === 'string' && i[k].length > 0 && i[k].length <= ({id:128,title:300,faculty:120})[k]));
+    && b.items.every((i) => i && (i.is_saved == null || typeof i.is_saved === 'boolean') && (i.description == null || typeof i.description === 'string' && i.description.length <= 2000) && ['id', 'title', 'faculty'].every((k) => typeof i[k] === 'string' && i[k].length > 0 && i[k].length <= ({id:128,title:300,faculty:120})[k]));
 }
 export function useCatalogData(faculty, query = '', favorites = false) {
   const [revision, revise] = useState(0);
