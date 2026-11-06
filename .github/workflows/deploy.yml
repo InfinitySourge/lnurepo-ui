@@ -1,6 +1,8 @@
-name: Verify and deploy React to Azure
+name: Verify UI and deploy manually
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 permissions:
@@ -31,6 +33,7 @@ jobs:
         env:
           VITE_API_ORIGIN: https://api.lnurepo.info
       - name: Upload to Azure Storage
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
         uses: azure/CLI@v2
         env:
           AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_CONNECTION_STRING }}

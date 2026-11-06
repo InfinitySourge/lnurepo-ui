@@ -17,6 +17,6 @@ export default defineConfig(({ mode, command }) => {
       },
     }],
     build: { sourcemap: false },
-    test: { environment: 'jsdom', globals: true, setupFiles: ['./src/test-setup.js'] },
+    test: { include: ['src/**/*.test.{js,jsx}'], environment: 'jsdom', globals: true, setupFiles: ['./src/test-setup.js'] },
   };
 });

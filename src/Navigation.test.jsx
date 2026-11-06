@@ -8,17 +8,20 @@ function setup(saved = profile) {
   vi.stubGlobal('fetch', vi.fn(async (url, options) => {
     let data;
     const path = new URL(url).pathname;
-    if (path === '/auth/me') data = {id:'demo:test',name:'Марко Студент',email:'demo@example.invalid'};
-    else if (path === '/api/profile') data = options.method === 'POST' ? JSON.parse(options.body) : saved;
+    if (path === '/auth/me') data = {id:'test:user',name:'Марко Студент',email:'test@example.invalid',...profile,role_hint:'student'};
+    else if (path === '/api/profiles') data = { ...profile, ...JSON.parse(options.body), id: 'test:user' };
+    else if (decodeURIComponent(path) === '/api/profiles/test:user') data = saved && { ...saved, id: 'test:user' };
+    else if (path === '/api/faculties') data = [{ id: 15, name: profile.faculty }];
     else if (path === '/api/catalog') data = {disciplines:bucket,teachers:bucket,materials:bucket};
     else if (path === '/api/favorites') data = bucket;
     else if (path === '/api/faq') data = {available:false,items:[]};
     else throw new Error('Unexpected endpoint');
-    return {status:200,ok:true,json:async () => data};
+    const status = data === null ? 404 : options.method === 'POST' ? 201 : 200;
+    return {status,ok:status < 400,json:async () => data};
   }));
   render(<MemoryRouter initialEntries={['/profile']}><App /></MemoryRouter>);
 }
-afterEach(() => {cleanup();vi.unstubAllGlobals();sessionStorage.clear();});
+afterEach(() => {cleanup();vi.unstubAllGlobals();});
 it('opens catalog and favorites repeatedly and highlights the actual route', async () => {
   setup();
   await screen.findByRole('heading',{name:'Ваш профіль'});
@@ -39,17 +42,9 @@ it('explains the profile gate and unlocks navigation after saving', async () => 
   fireEvent.click(screen.getByRole('link',{name:'Збережене'}));
   expect(await screen.findByRole('heading',{name:'Завершіть реєстрацію'})).toBeTruthy();
   expect(screen.getByRole('link',{name:'Профіль'}).getAttribute('aria-current')).toBe('page');
-  const labels = {first_name:'Ім’я',last_name:'Прізвище',role:'Ви студент чи викладач?',faculty:'Факультет',group:'Група'};
-  for (const [key,value] of Object.entries(profile)) fireEvent.change(screen.getByLabelText(labels[key]),{target:{value}});
+  fireEvent.change(screen.getByLabelText('Група'),{target:{value:profile.group}});
   fireEvent.click(screen.getByRole('button',{name:'Зберегти профіль'}));
   await screen.findByRole('heading',{name:'Знання ближче, ніж здається'});
   fireEvent.click(screen.getByRole('link',{name:'Збережене'}));
   expect(await screen.findByRole('heading',{name:'Збережене'})).toBeTruthy();
-});
-it('retains the demo profile after a module reload', async () => {
-  const before = await import('./design-preview.js');
-  before.previewRequest('/api/profile',{method:'POST',body:profile});
-  vi.resetModules();
-  const after = await import('./design-preview.js');
-  expect(after.previewRequest('/api/profile',{method:'GET'})).toEqual(profile);
 });
