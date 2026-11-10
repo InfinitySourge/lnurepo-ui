@@ -6,6 +6,8 @@ const initial = { user: null, profile: null, profileUnavailable: false, loading:
 export function AuthProvider({ children }) {
   const [state, setState] = useState(initial);
   const [revision, setRevision] = useState(0);
+  const [profileDraft, setProfileDraft] = useState(null);
+  const [catalogFilters, setCatalogFilters] = useState({ faculty: null, query: '', category: 'all' });
   useEffect(() => {
     const controller = new AbortController();
     async function load() {
@@ -15,11 +17,11 @@ export function AuthProvider({ children }) {
         let profile = null;
         let profileUnavailable = false;
         try {
-          profile = await request('/api/profile', { signal: controller.signal });
-          if (profile !== null && !isProfile(profile)) throw new ApiError();
+          profile = await request('/api/profiles/' + encodeURIComponent(user.id), { signal: controller.signal });
+          if (!isProfile(profile) || profile.id !== user.id) throw new ApiError();
         } catch (error) {
           if (error.status === 401) throw error;
-          profileUnavailable = true;
+          if (error.status !== 404) profileUnavailable = true;
         }
         if (!controller.signal.aborted) setState({ user, profile, profileUnavailable, loading: false, unavailable: false });
       } catch (error) {
@@ -33,12 +35,23 @@ export function AuthProvider({ children }) {
   async function logout() {
     try { await request('/auth/logout', { method: 'POST' }); }
     catch (error) { if (error.status !== 401) throw error; }
+    setProfileDraft(null);
+    setCatalogFilters({ faculty: null, query: '', category: 'all' });
     setState({ ...initial, loading: false });
   }
-  async function saveProfile(profile) {
-    const saved = await request('/api/profile', { method: 'POST', body: profile });
-    if (!isProfile(saved)) throw new ApiError();
+  async function saveProfile(values) {
+    const path = '/api/profiles/' + encodeURIComponent(state.user.id);
+    const body = { group: values.group };
+    let saved;
+    if (state.profile) {
+      await request(path, { method: 'PUT', body });
+      saved = await request(path);
+    } else {
+      saved = await request('/api/profiles', { method: 'POST', body });
+    }
+    if (!isProfile(saved) || saved.id !== state.user.id) throw new ApiError();
+    setProfileDraft(null);
     setState((previous) => ({ ...previous, profile: saved, profileUnavailable: false }));
   }
-  return <AuthContext.Provider value={{ ...state, retry, logout, saveProfile }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ ...state, retry, logout, saveProfile, profileDraft, setProfileDraft, catalogFilters, setCatalogFilters }}>{children}</AuthContext.Provider>;
 }

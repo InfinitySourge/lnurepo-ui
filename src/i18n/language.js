@@ -49,7 +49,7 @@ export function setLanguage(value) {
   try {
     localStorage.setItem(storageKey, value);
   } catch {
-    // Ignore storage errors
+
   }
 
   applyLanguage();

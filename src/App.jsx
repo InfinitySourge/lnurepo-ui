@@ -1,3 +1,4 @@
+import { useI18n } from './i18n/useI18n.js';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout.jsx';
 import FaqPage from './pages/FaqPage.jsx';
@@ -12,11 +13,11 @@ import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { AuthProvider } from './auth.jsx';
 import { useAuth } from './auth-context.js';
 function ProtectedRoute({ children }) {
+  const { t } = useI18n();
   const { user, profileUnavailable, loading, unavailable, retry } = useAuth();
-  if (loading) return <Loading fullPage>Перевіряємо сесію та профіль…</Loading>;
-  if (unavailable) return <ErrorPage code={503} retry={retry} />;
+  if (loading) return <Loading fullPage>{t('auth.checkingProfile')}</Loading>;
+  if (unavailable || profileUnavailable) return <ErrorPage code={503} retry={retry} />;
   if (!user) return <Navigate to="/login" replace />;
-  if (profileUnavailable) return <ErrorPage code={503} retry={retry} />;
   return children;
 }
 function ProfileRequired({ children }) {

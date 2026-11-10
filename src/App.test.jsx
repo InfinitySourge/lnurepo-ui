@@ -13,8 +13,8 @@ describe('Render main app', () => {
         <App />
       </BrowserRouter>
     );
-    
-   
+
+
     expect(await screen.findByRole('link', { name: 'Увійти через Microsoft' })).toBeTruthy();
   });
 });

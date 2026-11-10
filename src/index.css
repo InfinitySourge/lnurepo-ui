@@ -28,6 +28,9 @@
   }
   body { @apply m-0 font-sans antialiased; background: var(--app-background); color: var(--app-text); }
   button, a, input, select { @apply outline-offset-4; }
+  input, select, textarea { font-size: 1rem !important; }
+  html { scrollbar-gutter: stable; }
+  html:has(dialog[open]) { overflow: hidden; }
   ::selection { @apply bg-blue-200 text-slate-950; }
 }
 @layer components {
@@ -35,6 +38,7 @@
   .app-panel { background: var(--app-surface); color: var(--app-text); border-color: var(--app-border); }
   .app-muted { color: var(--app-muted); }
   .app-nav-link {
+    min-height: 44px;
     display: block;
     border: 1px solid transparent;
     border-radius: .75rem;
@@ -49,5 +53,50 @@
     background: var(--app-accent);
     border-color: var(--app-accent);
     color: #ffffff;
+  }
+}
+
+.flash-stage { color-scheme: normal; }
+.flash-grenade {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 5px 8px #0006);
+}
+.flash-grenade.is-flying { animation: grenade-flight 950ms cubic-bezier(.2, .65, .35, 1) both; }
+@keyframes grenade-flight {
+  0% { transform: translate(calc(var(--launch-x) - 50px), calc(var(--launch-y) - 50px)) rotate(-40deg) scale(.45); opacity: 1; }
+  50% { transform: translate(calc(var(--apex-x) - 50px), calc(var(--apex-y) - 50px)) rotate(160deg) scale(1.1); opacity: 1; }
+  94% { transform: translate(calc(var(--burst-x) - 50px), calc(var(--burst-y) - 50px)) rotate(370deg) scale(1); opacity: 1; }
+  100% { transform: translate(calc(var(--burst-x) - 50px), calc(var(--burst-y) - 50px)) rotate(390deg) scale(1); opacity: 0; }
+}
+.flash-burst {
+  left: calc(var(--burst-x) - var(--burst-size) / 2);
+  top: calc(var(--burst-y) - var(--burst-size) / 2);
+  width: var(--burst-size);
+  height: var(--burst-size);
+  box-shadow: 0 0 80px 30px white;
+  animation: grenade-burst 750ms cubic-bezier(.08, .7, .2, 1) 900ms both;
+}
+@keyframes grenade-burst {
+  0% { transform: scale(0); opacity: 0; }
+  12% { opacity: 1; }
+  65%, 100% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flash-grenade.is-flying, .flash-burst { animation: none; }
+}
+
+@media (max-width: 1023px) {
+  .app-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: .65rem .25rem;
+    font-size: .75rem;
+    text-align: center;
   }
 }

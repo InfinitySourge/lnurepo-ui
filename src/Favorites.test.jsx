@@ -1,11 +1,23 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import FavoriteButton from './components/FavoriteButton.jsx';
+import CatalogSection from './components/CatalogSection.jsx';
 import { setLanguage } from './i18n/language.js';
 
 beforeEach(() => { setLanguage('uk'); vi.stubGlobal('fetch', vi.fn()); });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); localStorage.clear(); });
 const response = (status, data) => ({ status, ok: status < 400, json: async () => data });
+
+it('restores the server favorite state on catalog entry and follows refreshed responses', () => {
+  const bucket = (saved) => ({ available: true, has_more: false, items: [{ id: '7', title: 'Книга', faculty: 'Фізичний факультет', is_saved: saved }] });
+  const view = render(<CatalogSection title="Матеріали" materials bucket={bucket(true)} />);
+  expect(screen.getByRole('button', { name: 'Прибрати зі збереженого' }).getAttribute('aria-pressed')).toBe('true');
+  view.rerender(<CatalogSection title="Матеріали" materials bucket={bucket(false)} />);
+  expect(screen.getByRole('button', { name: 'Зберегти матеріал' }).getAttribute('aria-pressed')).toBe('false');
+  view.rerender(<CatalogSection title="Матеріали" materials bucket={bucket(true)} />);
+  expect(screen.getByRole('button', { name: 'Прибрати зі збереженого' }).getAttribute('aria-pressed')).toBe('true');
+  expect(fetch).not.toHaveBeenCalled();
+});
 
 it('saves a material through the API and removes the saved association', async () => {
   fetch.mockResolvedValueOnce(response(201, { material_id: 7 })).mockResolvedValueOnce(response(204));

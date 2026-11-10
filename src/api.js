@@ -1,3 +1,4 @@
+import { t } from './i18n/language.js';
 const configuredOrigin = import.meta.env.VITE_API_ORIGIN || 'https://api.lnurepo.info';
 const url = new URL(configuredOrigin);
 if (url.pathname !== '/' || url.search || url.hash || url.username || url.password
@@ -5,24 +6,24 @@ if (url.pathname !== '/' || url.search || url.hash || url.username || url.passwo
   throw new Error('Invalid API origin');
 }
 export const API_ORIGIN = url.origin;
-export const DESIGN_PREVIEW = import.meta.env.DEV && import.meta.env.MODE === 'design'
-  && ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
 export class ApiError extends Error {
-  constructor(status = 0) { super('Request failed'); this.status = status; }
+  constructor(status = 0, fields = []) {
+    super('Request failed');
+    this.status = status;
+    this.fields = fields;
+  }
 }
 export async function request(path, { signal, method = 'GET', body, query } = {}) {
-  if (!/^\/(auth|api)\/[a-z/]+$/.test(path)) throw new ApiError();
+  const fixed = ['/auth/me', '/auth/logout', '/api/catalog', '/api/favorites', '/api/faq', '/api/faculties', '/api/profiles'];
+  let decoded;
+  try { decoded = decodeURIComponent(path); } catch { throw new ApiError(); }
+  if (!fixed.includes(path) && !/^\/api\/profiles\/[a-zA-Z0-9:-]{1,73}$/.test(decoded) && !/^\/api\/favorites\/[1-9][0-9]{0,15}$/.test(path)) throw new ApiError();
   let suffix = '';
   if (query !== undefined) {
-    if (path !== '/api/catalog' || method !== 'GET' || !query || typeof query !== 'object'
-        || Object.entries(query).some(([key, value]) => !['faculty', 'q'].includes(key) || typeof value !== 'string')) throw new ApiError();
+    const allowed = path === '/api/catalog' ? ['faculty', 'q'] : path === '/api/faculties' ? ['offset', 'limit'] : [];
+    if (!allowed.length || method !== 'GET' || !query || typeof query !== 'object' || Array.isArray(query)
+        || Object.entries(query).some(([key, value]) => !allowed.includes(key) || typeof value !== 'string')) throw new ApiError();
     suffix = '?' + new URLSearchParams(query).toString();
-  }
-  if (DESIGN_PREVIEW) {
-    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-    const { previewRequest } = await import('./design-preview.js');
-    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-    return previewRequest(path, { method, body });
   }
   const controller = new AbortController();
   const abort = () => controller.abort();
@@ -35,7 +36,14 @@ export async function request(path, { signal, method = 'GET', body, query } = {}
       signal: controller.signal,
       ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
     });
-    if (response.status === 401 || !response.ok) throw new ApiError(response.status);
+    if (!response.ok) {
+      let problem;
+      try { problem = await response.json(); } catch { }
+      const fields = problem?.errors && typeof problem.errors === 'object' && !Array.isArray(problem.errors)
+        ? ['first_name', 'last_name', 'role', 'faculty', 'group', 'body', 'query.faculty', 'query.q']
+          .filter((field) => Object.hasOwn(problem.errors, field)) : [];
+      throw new ApiError(response.status, fields);
+    }
     return response.status === 204 ? null : await response.json();
   } finally {
     clearTimeout(timeout);
@@ -43,9 +51,5 @@ export async function request(path, { signal, method = 'GET', body, query } = {}
   }
 }
 export function errorMessage(error) {
-  if (error.status === 401) return 'Сесія завершилась. Увійдіть знову; введені дані ще не збережені.';
-  if (error.status === 403) return 'Доступ заборонено. Перевірте обліковий запис або зверніться до підтримки.';
-  if (error.status === 422) return 'Перевірте правильність полів. Сервер не прийняв ці дані.';
-  if (error.status === 429) return 'Забагато спроб. Зачекайте хвилину й спробуйте знову.';
-  return 'Не вдалося зв’язатися із сервером. Дані не збережені. Спробуйте ще раз.';
+  return t([400, 401, 403, 404, 409, 413, 422, 429, 500, 503].includes(error?.status) ? `error.${error.status}` : 'error.network');
 }
